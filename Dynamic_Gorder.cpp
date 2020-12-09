@@ -12,6 +12,9 @@
 #include <chrono>
 #include <thread>
 
+#include "Graph.h"
+#include "Util.h"
+
 using namespace std;
 
 void GO_PQ(unordered_map<unsigned int, vector<unsigned int>> & Graph, vector<unsigned int> & New, int w, vector <unsigned int> & P)
@@ -41,7 +44,7 @@ void GO_PQ(unordered_map<unsigned int, vector<unsigned int>> & Graph, vector<uns
   unsigned int Vb = -1;
   unsigned int Vmax;
   int max_key;
-
+  Gorder::Graph g;
   // Vb が N(u) に含まれない場合の実装は未完成
   while (Q.size() > 0) {
     Ve = P.at(index-1);

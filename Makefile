@@ -1,7 +1,7 @@
 CC      = g++
 CPPFLAGS= -Wno-deprecated -O3 -c -m64 -march=native -std=c++17 -DGCC -DRelease
 LDFLAGS = -static -O3 -m64
-SOURCES = Dynamic_Gorder.cpp Util_my.cpp Graph_my.cpp UnitHeap_my.cpp
+SOURCES = Dynamic_Gorder.cpp Util.cpp Graph.cpp UnitHeap.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 EXECUTABLE=Dynamic_Gorder
 
