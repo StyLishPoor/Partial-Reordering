@@ -48,47 +48,63 @@ void Graph::clear() {
 }
 
 
-void Graph::readGraph(const string& fullname) {
-	FILE* fp;
-	fp=fopen(fullname.c_str(), "r");
-	if(fp==NULL){
-		cout << "Fail to open " << fullname << endl;
-		quit();
-	}
+//void Graph::readGraph(const string& fullname) {
+void Graph::readGraph(unordered_map<unsigned int, vector<unsigned int>> & all_graph, vector<unsigned int> & New) {
+	//FILE* fp;
+	//fp=fopen(fullname.c_str(), "r");
+	//if(fp==NULL){
+	//	cout << "Fail to open " << fullname << endl;
+	//	quit();
+	//}
 
-	char line[40];
-	int u, v;
+	//char line[40];
+	//int u, v;
 	const char* str=NULL;
 	
 	vsize=0;
 	edgenum=0;
-	vector< pair<int, int> > edges;
+	vector< pair<unsigned int, unsigned int> > edges;
 	edges.reserve(100000000);
 
-	while(feof(fp)!=true){
-		if(fgets(line, 40, fp)){
-			u=v=0;
-			str=line;
-			while(isdigit(*str))
-				u=u*10+(*str++ - '0');
-			str++;
-			while(isdigit(*str))
-				v=v*10+(*str++ - '0');
+	//while(feof(fp)!=true){
+	//	if(fgets(line, 40, fp)){
+	//		u=v=0;
+	//		str=line;
+	//		while(isdigit(*str))
+	//			u=u*10+(*str++ - '0');
+	//		str++;
+	//		while(isdigit(*str))
+	//			v=v*10+(*str++ - '0');
 
-			if(u==v)
-				continue;
-			edgenum++;
-			if(u>vsize)
-				vsize=u;
-			if(v>vsize)
-				vsize=v;
+	//		if(u==v)
+	//			continue;
+	//		edgenum++;
+	//		if(u>vsize)
+	//			vsize=u;
+	//		if(v>vsize)
+	//			vsize=v;
 
-			edges.push_back(make_pair(u, v));
-		}
-	}
-	vsize++;
+	//		edges.push_back(make_pair(u, v));
+	//	}
+	//}
+  for (auto & new_node : New) {
+    if (new_node > vsize) {
+      vsize = new_node;
+    }
+    for (auto & adj_node : all_graph[new_node]) {
+      if (adj_node > vsize) {
+        vsize = adj_node;
+      }
+      edges.push_back(make_pair(new_node, adj_node));
+      edges.push_back(make_pair(adj_node, new_node));
+      edgenum += 2;
+    }
+  }
+  vsize++;
 
-	fclose(fp);
+	//vsize++;
+
+	//fclose(fp);
 	graph.resize(vsize+1);
 	for(long long i=0; i<edges.size(); i++){
 		graph[edges[i].first].outdegree++;
@@ -101,7 +117,7 @@ void Graph::readGraph(const string& fullname) {
 		graph[i].instart=graph[i-1].instart+graph[i-1].indegree;
 	}
 	
-	sort(edges.begin(), edges.end(), [](const pair<int, int>& a, const pair<int, int>& b)->bool{
+	sort(edges.begin(), edges.end(), [](const pair<unsigned int, unsigned int>& a, const pair<unsigned int, unsigned int>& b)->bool{
 		if(a.first<b.first)
 			return true;
 		else if(a.first>b.first)
@@ -120,7 +136,7 @@ void Graph::readGraph(const string& fullname) {
 		outedge[i]=edges[i].second;
 	}
 
-	vector< pair<int, int> >().swap(edges);
+	vector< pair<unsigned int, unsigned int> >().swap(edges);
 #ifndef Release	
 	vector<int> inpos(vsize);
 	for(int i=0; i<vsize; i++){
@@ -135,14 +151,14 @@ void Graph::readGraph(const string& fullname) {
 	}
 #endif
 
-	cout << "vsize: " << vsize << endl;
-	cout << "edgenum: " << edgenum << endl;
+	//cout << "vsize: " << vsize << endl;
+	//cout << "edgenum: " << edgenum << endl;
 	graph[vsize].outstart=edgenum;
 	graph[vsize].instart=edgenum;
 }
 
 void Graph::Transform(){
-	vector<int> order;
+	vector<unsigned int> order;
 	RCMOrder(order);
 	if(order.size()!=vsize){
 		cout << "order.size()!=vsize" << endl;
@@ -153,8 +169,8 @@ void Graph::Transform(){
 		quit();
 	}
 
-	vector<int>().swap(inedge);
-	vector< pair<int, int> > edges;
+	vector<unsigned int>().swap(inedge);
+	vector< pair<unsigned int, unsigned int> > edges;
 	edges.reserve(edgenum);
 	for(int i=0; i<vsize; i++){
 		for(int j=graph[i].outstart, limit=graph[i+1].outstart; j<limit; j++)
@@ -182,7 +198,7 @@ void Graph::Transform(){
 	graph[vsize].outstart=edgenum;
 	graph[vsize].instart=edgenum;
 
-	sort(edges.begin(), edges.end(), [](const pair<int, int>& a, const pair<int, int>& b)->bool{
+	sort(edges.begin(), edges.end(), [](const pair<unsigned int, unsigned int>& a, const pair<unsigned int, unsigned int>& b)->bool{
 		if(a.first<b.first)
 			return true;
 		else if(a.first>b.first)
@@ -200,8 +216,8 @@ void Graph::Transform(){
 	for(long long i=0; i<edges.size(); i++){
 		outedge[i]=edges[i].second;
 	}
-	vector< pair<int, int> >().swap(edges);
-	vector<int> inpos(vsize);
+	vector< pair<unsigned int, unsigned int> >().swap(edges);
+	vector<unsigned int> inpos(vsize);
 	for(int i=0; i<vsize; i++){
 		inpos[i]=graph[i].instart;
 	}
@@ -225,10 +241,10 @@ void Graph::writeGraph(ostream& out){
 }
 
 
-void Graph::PrintReOrderedGraph(const vector<int>& order){
+void Graph::PrintReOrderedGraph(const vector<unsigned int>& order){
 	ofstream out((name+"_Gorder.txt").c_str());
 
-	vector<int>().swap(inedge);
+	vector<unsigned int>().swap(inedge);
 
 	vector< vector<int> > ReOrderedGraph(vsize);
 	int u, v;
@@ -385,7 +401,7 @@ void Graph::GapCount(){
 	delete[] gap;
 }
 
-double Graph::GapCost(vector<int>& order){
+double Graph::GapCost(vector<unsigned int>& order){
 	double gaplog=0;
 	double gaplog2=0;
 	vector<int> edgelist;
@@ -412,28 +428,37 @@ double Graph::GapCost(vector<int>& order){
 }
 
 
-void Graph::GorderGreedy(vector<int>& retorder, int window){
-	UnitHeap unitheap(vsize);
+//void Graph::GorderGreedy(vector<unsigned int>& retorder, int window){
+void Graph::GorderGreedy(unordered_map<unsigned int, unsigned int>& retorder, int window, vector<unsigned int> & New){
+	//UnitHeap unitheap(vsize);
+	UnitHeap unitheap(New.size());
 	vector<bool> popvexist(vsize, false);
-	vector<int> order;
+	vector<unsigned int> order;
 	int count=0;
 	vector<int> zero;
 	zero.reserve(10000);
-	order.reserve(vsize);
+	//order.reserve(vsize);
+	order.reserve(New.size());
 	const int hugevertex=sqrt((double)vsize);
-
-	for(int i=0; i<vsize; i++){
-		unitheap.LinkedList[i].key=graph[i].indegree;
-		unitheap.update[i]=-graph[i].indegree;
+  int index = 0;
+	//for(int i=0; i<vsize; i++){
+  for (auto & tmp : New) {
+	  unitheap.LinkedList[index].key=graph[tmp].indegree;
+	  //unitheap.LinkedList[i].key=graph[i].indegree;
+	  unitheap.update[index++]=-graph[tmp].indegree;
+	  //unitheap.update[i]=-graph[i].indegree;
 	}
 	unitheap.ReConstruct();
 
 	int tmpindex, tmpweight;
 
 	tmpweight=-1;
-	for(int i=0; i<vsize; i++){
+  index = 0;
+	//for(int i=0; i<vsize; i++){
+  for (auto & tmp : New) {
 		if(graph[i].indegree>tmpweight){
-			tmpweight=graph[i].indegree;
+			tmpweight=graph[tmp].indegree;
+			//tmpweight=graph[i].indegree;
 			tmpindex=i;
 		}else if(graph[i].indegree+graph[i].outdegree==0){
 			unitheap.update[i]=INT_MAX/2;
@@ -641,15 +666,23 @@ void Graph::GorderGreedy(vector<int>& retorder, int window){
 	tmporder=vector<int>();
 #endif
 
-	retorder.clear();
-	retorder.resize(vsize);
-	for(int i=0; i<vsize; i++){
-		retorder[order[i]]=i;
-	}
+	//retorder.clear();
+	//retorder.resize(vsize);
+	//for(int i=0; i<vsize; i++){
+//		retorder[order[i]]=i;
+//	}
+  for (auto & tmp : order) {
+    if (retorder.count(tmp) == 0) {
+      //cout << "New" << endl;
+      retorder[tmp] = retorder.size();
+    } else {
+      cout << "Exist" << endl;
+    }
+  }
 }
 
 
-void Graph::RCMOrder(vector<int>& retorder){
+void Graph::RCMOrder(vector<unsigned int>& retorder){
 	queue<int> que;
 	bool* BFSflag=new bool[vsize];
 	bool* QueFlag=new bool[vsize];
@@ -725,7 +758,7 @@ void Graph::RCMOrder(vector<int>& retorder){
 }
 
 
-unsigned long long Graph::LocalityScore(const int w){
+unsigned long long Graph::LocalityScore(const unsigned int w){
 	unsigned long long sum=0;
 	for(int i=0; i<vsize; i++){
 		for(int j=i-1; j>=i-w && j>=0; j--){

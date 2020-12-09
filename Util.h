@@ -47,7 +47,7 @@ void VectorPreprocessing(vector<T>& v, T u){
 }
 
 
-inline int IntersectionSize(const int* v1, const int* v2, int s1, int s2, int u){
+inline int IntersectionSize(const unsigned int* v1, const unsigned int* v2, int s1, int s2, int u){
 	int i=upper_bound(v1, v1+s1, u)-v1;
 	int j=lower_bound(v2, v2+s2, v1[i])-v2;
 	int count=0;

@@ -19,6 +19,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <vector>
 #include <set>
 #include <map>
+#include <unordered_map>
 #include <list>
 #include <queue>
 #include <algorithm>
@@ -54,13 +55,13 @@ public:
 
 class Graph{
 	public:
-		int vsize;
+		unsigned int vsize;
 		long long edgenum;
 		string name;
 		
 		vector<Vertex> graph;
-		vector<int> outedge;
-		vector<int> inedge;
+		vector<unsigned int> outedge;
+		vector<unsigned int> inedge;
 	
 		string getFilename();
 		void setFilename(string name);
@@ -68,9 +69,10 @@ class Graph{
 		Graph();
 		~Graph();
 		void clear();
-		void readGraph(const string& fullname);
+		//void readGraph(const string& fullname);
+    void readGraph(unordered_map<unsigned int, vector<unsigned int>> & all_graph, vector<unsigned int> & New);
 		void writeGraph(ostream&);
-		void PrintReOrderedGraph(const vector<int>& order);
+		void PrintReOrderedGraph(const vector<unsigned int>& order);
 		void GraphAnalysis();
 		void RemoveDuplicate(const string& fullname);
 		
@@ -79,12 +81,13 @@ class Graph{
 		static vector<string>& split(const string &s, char delim, vector<string> &elems);
 
 		void GapCount();
-		double GapCost(vector<int>& order);
+		double GapCost(vector<unsigned int>& order);
 		void Transform();
-		void GorderGreedy(vector<int>& order, int window);
+		//void GorderGreedy(vector<unsigned int>& order, int window);
+		void GorderGreedy(unordered_map<unsigned int, unsigned int>& retorder, int window, vector<unsigned int> & New);
 
-		void RCMOrder(vector<int>& order);
-		unsigned long long LocalityScore(const int w);
+		void RCMOrder(vector<unsigned int>& order);
+		unsigned long long LocalityScore(const unsigned int w);
 };
 
 }

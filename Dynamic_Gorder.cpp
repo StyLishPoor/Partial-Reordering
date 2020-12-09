@@ -1,4 +1,3 @@
-//#include "stdafx.h"
 #include <iostream>
 #include <random>
 #include <vector>
@@ -16,79 +15,88 @@
 #include "Util.h"
 
 using namespace std;
+using namespace Gorder;
 
-void GO_PQ(unordered_map<unsigned int, vector<unsigned int>> & Graph, vector<unsigned int> & New, int w, vector <unsigned int> & P)
-//void GO_PQ(unordered_map<unsigned int, vector<unsigned int>> & Graph, vector<unsigned int> & New, int w, unordered_map <unsigned int, unsigned int> & P)
+//void GO_PQ(unordered_map<unsigned int, vector<unsigned int>> & Graph, vector<unsigned int> & New, int w, vector <unsigned int> & P)
+////void GO_PQ(unordered_map<unsigned int, vector<unsigned int>> & Graph, vector<unsigned int> & New, int w, unordered_map <unsigned int, unsigned int> & P)
+//{
+//  unsigned int index = P.size();
+//  map<unsigned int, int> Q;
+//  if (index == 0) { // 一回目の処理
+//    unsigned int start_node;
+//    int degree = 0;
+//    for (auto & tmp : New) {
+//      Q[tmp] = 0;
+//      if(Graph[tmp].size() > degree) {
+//        degree = Graph[tmp].size();
+//        start_node = tmp;
+//      }
+//    }
+//    //P[index++] = start_node;
+//    P.push_back(start_node);
+//    index++;
+//  } else { // 二回目以降の処理
+//    for (auto & tmp : New) {
+//      Q[tmp] = 0;
+//    }
+//  }
+//  unsigned int Ve = -1;
+//  unsigned int Vb = -1;
+//  unsigned int Vmax;
+//  int max_key;
+//  Gorder::Graph g;
+//  // Vb が N(u) に含まれない場合の実装は未完成
+//  while (Q.size() > 0) {
+//    Ve = P.at(index-1);
+//    //cout << Ve << endl;
+//    for (auto & u : Graph[Ve]) {
+//      if (Q.count(u) != 0) Q[u] = Q[u] + 1;
+//      for (auto & v : Graph[u]){
+//        //if ((find(Graph[u].begin(), Graph[u].end(), Vb) == Graph[u].end()) && Q.count(v) != 0) Q[v] = Q[v] + 1;
+//        if (Q.count(v) != 0) Q[v] = Q[v] + 1;
+//      }
+//    }
+//    if (index > w + 1) {
+//      Vb = P.at(index - w - 1);
+//      //cout << " Vb " << Vb << endl;
+//      for (auto & u : Graph[Vb]) {
+//        if (Q.count(u) != 0) Q[u] = Q[u] - 1;
+//        for (auto & v : Graph[u]){
+//          if (Q.count(v) != 0) Q[v] = Q[v] - 1;
+//          //if ((find(Graph[u].begin(), Graph[u].end(), Ve) == Graph[u].end()) && Q.count(v) != 0) Q[v] = Q[v] - 1;
+//        }
+//      }
+//    }
+//    
+//    max_key = Q.begin() -> second;
+//    Vmax = Q.begin() -> first;
+//    for (auto & [key, value] : Q) {
+//      if (value > max_key) {
+//        max_key = value;
+//        Vmax = key;
+//      }
+//    }
+//    //max_key = -1;
+//
+//    P.push_back(Vmax);
+//    index++;
+//    //cout << "Vmax : " << Vmax << endl;
+//    //New.erase(New.begin() + find(New.begin(), New.end(), Vmax));
+//    //New.erase(find(New.begin(), New.end(), Vmax));
+//    //New.erase(remove(New.begin(), New.end(), Vmax), New.end());
+//    //cout << Q.count(Vmax) << endl;
+//    Q.erase(Vmax);
+//    //cout << "Q Size : " << Q.size() << endl;
+//    //cout << "New Size : " << New.size() << endl;
+//  }
+//}
+
+void GO_PQ(unordered_map<unsigned int, vector<unsigned int>> & all_graph, vector<unsigned int> & New, int w, unordered_map<unsigned int, unsigned int> & Gorder_MAP)
 {
-  unsigned int index = P.size();
-  map<unsigned int, int> Q;
-  if (index == 0) { // 一回目の処理
-    unsigned int start_node;
-    int degree = 0;
-    for (auto & tmp : New) {
-      Q[tmp] = 0;
-      if(Graph[tmp].size() > degree) {
-        degree = Graph[tmp].size();
-        start_node = tmp;
-      }
-    }
-    //P[index++] = start_node;
-    P.push_back(start_node);
-    index++;
-  } else { // 二回目以降の処理
-    for (auto & tmp : New) {
-      Q[tmp] = 0;
-    }
-  }
-  unsigned int Ve = -1;
-  unsigned int Vb = -1;
-  unsigned int Vmax;
-  int max_key;
-  Gorder::Graph g;
-  // Vb が N(u) に含まれない場合の実装は未完成
-  while (Q.size() > 0) {
-    Ve = P.at(index-1);
-    //cout << Ve << endl;
-    for (auto & u : Graph[Ve]) {
-      if (Q.count(u) != 0) Q[u] = Q[u] + 1;
-      for (auto & v : Graph[u]){
-        //if ((find(Graph[u].begin(), Graph[u].end(), Vb) == Graph[u].end()) && Q.count(v) != 0) Q[v] = Q[v] + 1;
-        if (Q.count(v) != 0) Q[v] = Q[v] + 1;
-      }
-    }
-    if (index > w + 1) {
-      Vb = P.at(index - w - 1);
-      //cout << " Vb " << Vb << endl;
-      for (auto & u : Graph[Vb]) {
-        if (Q.count(u) != 0) Q[u] = Q[u] - 1;
-        for (auto & v : Graph[u]){
-          if (Q.count(v) != 0) Q[v] = Q[v] - 1;
-          //if ((find(Graph[u].begin(), Graph[u].end(), Ve) == Graph[u].end()) && Q.count(v) != 0) Q[v] = Q[v] - 1;
-        }
-      }
-    }
-    
-    max_key = Q.begin() -> second;
-    Vmax = Q.begin() -> first;
-    for (auto & [key, value] : Q) {
-      if (value > max_key) {
-        max_key = value;
-        Vmax = key;
-      }
-    }
-    //max_key = -1;
-
-    P.push_back(Vmax);
-    index++;
-    //cout << "Vmax : " << Vmax << endl;
-    //New.erase(New.begin() + find(New.begin(), New.end(), Vmax));
-    //New.erase(find(New.begin(), New.end(), Vmax));
-    //New.erase(remove(New.begin(), New.end(), Vmax), New.end());
-    //cout << Q.count(Vmax) << endl;
-    Q.erase(Vmax);
-    //cout << "Q Size : " << Q.size() << endl;
-    //cout << "New Size : " << New.size() << endl;
-  }
+  Graph g;
+  g.readGraph(all_graph, New);
+  g.Transform();
+  g.GorderGreedy(Gorder_MAP, w, New);
 }
 
 int main(int argc, char* argv[]) {
@@ -105,6 +113,7 @@ int main(int argc, char* argv[]) {
   
   unordered_map<unsigned int, vector<unsigned int>> All_Graph;
   unordered_map<unsigned int, vector<unsigned int>> Partial_Graph;
+  unordered_map<unsigned int, unsigned int> Gorder_MAP;
   unsigned int src, dst;
   cout << "READ" << endl;
   while(ifs >> src >> dst) {
@@ -153,7 +162,7 @@ int main(int argc, char* argv[]) {
         //  grouping.join();
         //}
         //grouping = thread(GO_PQ, ref(All_Graph), ref(buffer[buf_flag]), 5, ref(Gorder_dynamic));
-        GO_PQ(All_Graph, buffer, 5, Gorder_dynamic);
+        GO_PQ(All_Graph, buffer, 5, Gorder_MAP);
         //GO_PQ(All_Graph, buffer[buf_flag], 5, Gorder_dynamic);
         buffer.clear();
         dynamic_count = 0;
@@ -187,13 +196,13 @@ int main(int argc, char* argv[]) {
         tmp = next_node;
       }
     }
-    GO_PQ(All_Graph, buffer, 5, Gorder_dynamic);
+    GO_PQ(All_Graph, buffer, 5, Gorder_MAP);
     //GO_PQ(All_Graph, buffer[buf_flag], 5, Gorder_dynamic);
     end = chrono::system_clock::now();
   } while (node_num < mini_node_num);
 
   long count = 0;
-  cout << "node num : " << node_num << " " << Gorder_dynamic.size() << endl;
+  cout << "node num : " << node_num << " " << Gorder_MAP.size() << endl;
   float ave_deg =  static_cast<float>(edge_num)/node_num; 
   tmp = chrono::system_clock::now();
 
@@ -229,21 +238,20 @@ int main(int argc, char* argv[]) {
  //   }
  // }
  // 
-  ofstream ofs_original(argv[6], ios::trunc); // 取ってきたそのままの部分グラフ
-  ofstream ofs_gorder(argv[7], ios::trunc); // 完全なDBG 
-  cout << argv[6] << endl;
-  //ofstream ofs_dynamic(argv[8], ios::trunc); // Dynamic DBG 
-  string line;
-  string source;
-  string target;
-  cout << "Hi" << endl;
-  for (const auto & [key, value] : Partial_Graph) {
-    for (const auto & tmp : value) {
-      ofs_original << key << " " << tmp << endl;
-      ofs_gorder << distance(Gorder_dynamic.begin(), find(Gorder_dynamic.begin(), Gorder_dynamic.end(), key)) << " " << distance(Gorder_dynamic.begin(), find(Gorder_dynamic.begin(), Gorder_dynamic.end(), tmp))<< endl;
- //     ofs_dynamic << DBG_Dynamic_MAP[key] << " " << DBG_Dynamic_MAP[tmp] << endl;
-    }
-  }
+ // ofstream ofs_original(argv[6], ios::trunc); // 取ってきたそのままの部分グラフ
+ // ofstream ofs_gorder(argv[7], ios::trunc); // 完全なDBG 
+ // cout << argv[6] << endl;
+ // //ofstream ofs_dynamic(argv[8], ios::trunc); // Dynamic DBG 
+ // string line;
+ // string source;
+ // string target;
+ // cout << "Hi" << endl;
+ // for (const auto & [key, value] : Partial_Graph) {
+ //   for (const auto & tmp : value) {
+ //     ofs_original << key << " " << tmp << endl;
+ ////     ofs_dynamic << DBG_Dynamic_MAP[key] << " " << DBG_Dynamic_MAP[tmp] << endl;
+ //   }
+ // }
 
   return 0;
 }
