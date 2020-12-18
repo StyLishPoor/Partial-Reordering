@@ -54,7 +54,8 @@ void Mapping_id(Mapping & DDBG_Mapping, Group & DDBG_Group, unsigned int origina
   }
 }
 
-void Dynamic_DBG(Graph Partial_Graph, Graph & Mapped_Graph, Group & DDBG_Group, Mapping & DDBG_Mapping, vector<unsigned int> & counter, float ave_deg)
+//void Dynamic_DBG(Graph & Partial_Graph, Graph & Mapped_Graph, Group & DDBG_Group, Mapping & DDBG_Mapping, vector<unsigned int> & counter, float ave_deg)
+void Dynamic_DBG(Graph Partial_Graph, Graph Mapped_Graph, Group DDBG_Group, Mapping DDBG_Mapping, vector<unsigned int> counter, float ave_deg)
 {
   unsigned int mapped_src, mapped_dst;
   for (auto & [src, dsts] : Partial_Graph) {
@@ -72,7 +73,7 @@ void Dynamic_DBG(Graph Partial_Graph, Graph & Mapped_Graph, Group & DDBG_Group, 
       }
     }
   }
-  Partial_Graph.clear();
+  //Partial_Graph.clear();
 }
 
 void Initiate_Group(Graph & Partial_Graph, Group & DDBG_Group, float ave_deg, int remain)
@@ -128,7 +129,7 @@ int main(int argc, char* argv[]) {
   long mini_node_num = stol(argv[4]);
   long Grouping_Time = stol(argv[5]);
   
-  Graph Mapped_Graph, Partial_Graph, All_Graph;
+  Graph Mapped_Graph, Check_Graph, Partial_Graph, All_Graph;
   Mapping DDBG_Mapping;
   Group DDBG_Group(8);
   // debug 用のカウンタ
@@ -159,23 +160,24 @@ int main(int argc, char* argv[]) {
   //}
   cout << "start node : " << start_node << endl;
   //vector <pair<unsigned int, int>> buffer;
-  //vector <unsigned int> visited_order;
+  vector <unsigned int> visited_order;
   //vector <vector <unsigned int>> DBG_dynamic(8);
   do {
     thread grouping;
     Mapped_Graph.clear();
     Partial_Graph.clear();
+    Check_Graph.clear();
     DDBG_Mapping.clear();
-    //visited_order.clear();
+    visited_order.clear();
     tmp = start_node;
 
     RW_count = 1;
     Grouping_count = 1;
-    dynamic_node_num = 0;
+    dynamic_node_num = 1;
     dynamic_edge_num = 0;
 
     start = chrono::system_clock::now();
-    //visited_order.push_back(start_node);
+    visited_order.push_back(start_node);
     while (RW_count < RW_NUM) {
       if (Grouping_count == Grouping_Time) {
         if (grouping.joinable() == true) {
@@ -184,11 +186,12 @@ int main(int argc, char* argv[]) {
         if (Mapped_Graph.size() == 0) {
           Initiate_Group(Partial_Graph, DDBG_Group, static_cast<float>(dynamic_edge_num)/dynamic_node_num, ceil(static_cast<float>(RW_NUM)/Grouping_Time));
         }
-        //grouping = thread(Dynamic_DBG, buffer, ref(DBG_dynamic));
+        //grouping = thread(ref(Partial_Graph), ref(Mapped_Graph), ref(DDBG_Group), ref(DDBG_Mapping), counter, static_cast<float>(dynamic_edge_num)/dynamic_node_num);
+        grouping = thread(Partial_Graph, Mapped_Graph, DDBG_Group, DDBG_Mapping, counter, static_cast<float>(dynamic_edge_num)/dynamic_node_num);
         //cout << "tmp = start : " << tmp << " " << start_node << endl;
         //cout << " New arrive : " << Partial_Graph.size() << endl;
         //cout << "partial node : " << dynamic_node_num << " partial_edge : " << dynamic_edge_num << endl;
-        Dynamic_DBG(Partial_Graph, Mapped_Graph, DDBG_Group, DDBG_Mapping, counter, static_cast<float>(dynamic_edge_num)/dynamic_node_num);
+        //Dynamic_DBG(Partial_Graph, Mapped_Graph, DDBG_Group, DDBG_Mapping, counter, static_cast<float>(dynamic_edge_num)/dynamic_node_num);
         Partial_Graph.clear(); // 　部分グラフをここで削除してメモリ消費を抑える
         Grouping_count = 1;
         dynamic_node_num = 1;
@@ -207,9 +210,18 @@ int main(int argc, char* argv[]) {
           continue;
         } else {
           next_node = (All_Graph[tmp]).at(engine() % All_Graph[tmp].size());
+          if (Check_Graph[next_node].size() == 0) {
+            Check_Graph[tmp].push_back(next_node);
+            visited_order.push_back(next_node);
+            //buffer.push_back(make_pair(next_node, All_Graph[next_node].size()));
+            dynamic_node_num++;
+            dynamic_edge_num++;
+          } else if (find(Check_Graph[tmp].begin(), Check_Graph[tmp].end(), next_node) == Check_Graph[tmp].end()) {
+            Check_Graph[tmp].push_back(next_node);
+            dynamic_edge_num++;
+          }
           if (Partial_Graph[next_node].size() == 0) {
             Partial_Graph[tmp].push_back(next_node);
-            //visited_order.push_back(next_node);
             //buffer.push_back(make_pair(next_node, All_Graph[next_node].size()));
             dynamic_node_num++;
             dynamic_edge_num++;
@@ -222,8 +234,10 @@ int main(int argc, char* argv[]) {
       }
     }
     Dynamic_DBG(Partial_Graph, Mapped_Graph, DDBG_Group, DDBG_Mapping, counter, static_cast<float>(dynamic_edge_num)/dynamic_node_num);
+    cout << "[DEBUG] : " << Mapped_Graph.size() << " " << Check_Graph.size() << endl;
     end = chrono::system_clock::now();
-    //cout << Mapped_Graph.size() << endl;
+    cout << "Mapped num : " << DDBG_Mapping.size() << " " << visited_order.size() << endl;
+     //cout << Mapped_Graph.size() << endl;
   } while (0);
   //} while (Mapped_Graph.size() < mini_node_num);
 
@@ -274,12 +288,17 @@ int main(int argc, char* argv[]) {
   //string line;
   //string source;
   //string target;
-
+  unsigned int max_id = 0;
   for (const auto & [src, dsts] : Mapped_Graph) {
+    if (src > max_id) max_id = src;
     for (const auto & dst : dsts) {
+      if (dst > max_id) max_id = dst;
       ofs_ddbg << src << " " << dst << endl;
     }
   }
+
+  cout << "max_id " << max_id << endl;
+  cout << "start node " << start_node << " convert to " << DDBG_Mapping[start_node] << endl;
   //for (TNGraph::TEdgeI EI = partial_graph->BegEI(); EI < partial_graph->EndEI(); EI++){
   //  ofs_original << EI.GetSrcNId() << " " << EI.GetDstNId() << endl;
   //  ofs_true << DBG_MAP[EI.GetSrcNId()] << " " << DBG_MAP[EI.GetDstNId()] << endl;

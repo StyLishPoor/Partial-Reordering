@@ -1,6 +1,7 @@
 #include <iostream>
 #include <random>
 #include <vector>
+#include <set>
 #include <unordered_map>
 #include <map>
 #include <fstream>
@@ -57,6 +58,7 @@ void Mapping_id(Mapping & DDBG_Mapping, Group & DDBG_Group, unsigned int origina
 }
 
 void Dynamic_DBG(Ordered_Graph & Partial_Graph, Graph & Mapped_Graph, Group & DDBG_Group, Mapping & DDBG_Mapping, vector<unsigned int> & counter, float ave_deg)
+//void Dynamic_DBG(Graph Partial_Graph, Graph Mapped_Graph, Group DDBG_Group, Mapping DDBG_Mapping, vector<unsigned int> counter, float ave_deg)
 {
   unsigned int mapped_src, mapped_dst;
   for (auto & [src, dsts] : Partial_Graph) {
@@ -74,7 +76,7 @@ void Dynamic_DBG(Ordered_Graph & Partial_Graph, Graph & Mapped_Graph, Group & DD
       }
     }
   }
-  Partial_Graph.clear();
+  //Partial_Graph.clear();
 }
 
 void Initiate_Group(Ordered_Graph & Partial_Graph, Group & DDBG_Group, float ave_deg, int remain)
@@ -119,8 +121,8 @@ void Initiate_Group(Ordered_Graph & Partial_Graph, Group & DDBG_Group, float ave
 }
 
 int main(int argc, char* argv[]) {
-  if ( argc < 10 ) {
-    std::cout << "usage : ./ex [input_graph] [return_prob] [RW_NUM] [minimun_node_num] [original_output_txt] [sequential_output_txt] [random_output_txt] [DDBG_output_txt] [DBG_output_txt]" << endl;
+  if ( argc < 7 ) {
+    std::cout << "usage : ./ex [input_graph] [return_prob] [RW_NUM] [minimun_node_num] [Grouping Time] [output_txt]" << endl;
     return 0;
   }
   
@@ -130,12 +132,13 @@ int main(int argc, char* argv[]) {
   long mini_node_num = stol(argv[4]);
   long Grouping_Time = stol(argv[5]);
   
-  Graph Mapped_Graph, All_Graph;
-  Ordered_Graph Partial_Graph, Check_Graph;
-  Mapping DDBG_Mapping, DBG_MAP, Sequential_Mapping, Random_Mapping;
+  Graph Mapped_Graph, Check_Graph, All_Graph;
+  Ordered_Graph Partial_Graph;
+  Mapping DDBG_Mapping;
   Group DDBG_Group(8);
   // debug 用のカウンタ
   vector<unsigned int> counter(8);
+
   unsigned int src, dst;
   while(ifs >> src >> dst) {
     All_Graph[src].push_back(dst);
@@ -148,7 +151,7 @@ int main(int argc, char* argv[]) {
   mt19937 engine(seed_gen());
   uniform_real_distribution<> dist(0,1.0);
 
-  unsigned int RW_count, Grouping_count, dynamic_node_num, dynamic_edge_num, check_node_num, check_edge_num;
+  unsigned int RW_count, Grouping_count, dynamic_node_num, dynamic_edge_num;
   unsigned int tmp, next_node;
   unsigned int start_node = 466161;
   //unsigned int start_node;
@@ -160,34 +163,25 @@ int main(int argc, char* argv[]) {
   //  }
   //}
   cout << "start node : " << start_node << endl;
-  //vector <pair<unsigned int, int>> buffer;
-  vector <unsigned int> visited_partial;
-  vector <unsigned int> visited_check;
-  //vector <vector <unsigned int>> DBG_dynamic(8);
+  //set <unsigned int> visited_order;
+  vector <unsigned int> visited_order;
   do {
     thread grouping;
     Mapped_Graph.clear();
     Partial_Graph.clear();
     Check_Graph.clear();
-    Sequential_Mapping.clear();
-    Random_Mapping.clear();
-    visited_partial.clear();
-    visited_check.clear();
-    
+    DDBG_Mapping.clear();
+    visited_order.clear();
     tmp = start_node;
 
     RW_count = 1;
     Grouping_count = 1;
-    check_edge_num = 0;
-    check_node_num = 1;
-    dynamic_edge_num = 0;
     dynamic_node_num = 1;
-
+    dynamic_edge_num = 0;
 
     start = chrono::system_clock::now();
-    visited_partial.push_back(start_node);
-    visited_check.push_back(start_node);
-    Sequential_Mapping[start_node] = Sequential_Mapping.size();
+    visited_order.push_back(start_node);
+    //visited_order.insert(start_node);
     while (RW_count < RW_NUM) {
       if (Grouping_count == Grouping_Time) {
         if (grouping.joinable() == true) {
@@ -202,8 +196,9 @@ int main(int argc, char* argv[]) {
         //cout << " New arrive : " << Partial_Graph.size() << endl;
         //cout << "partial node : " << dynamic_node_num << " partial_edge : " << dynamic_edge_num << endl;
         Dynamic_DBG(Partial_Graph, Mapped_Graph, DDBG_Group, DDBG_Mapping, counter, static_cast<float>(dynamic_edge_num)/dynamic_node_num);
+        cout << "[DEBUG] : " << DDBG_Mapping.size() << " " << visited_order.size() << endl;
         Partial_Graph.clear(); // 　部分グラフをここで削除してメモリ消費を抑える
-        visited_partial.clear();
+        visited_order.clear();
         Grouping_count = 1;
         dynamic_node_num = 1;
         dynamic_edge_num = 0;
@@ -221,24 +216,14 @@ int main(int argc, char* argv[]) {
           continue;
         } else {
           next_node = (All_Graph[tmp]).at(engine() % All_Graph[tmp].size());
-          if (find(visited_partial.begin(), visited_partial.end(), next_node) == visited_partial.end()) {
-            visited_partial.push_back(next_node);
+          if (find(visited_order.begin(), visited_order.end(), next_node) == visited_order.end()) {
+            visited_order.push_back(next_node);
             Partial_Graph[tmp].push_back(next_node);          
             dynamic_node_num++;
             dynamic_edge_num++;
           } else if (find(Partial_Graph[tmp].begin(), Partial_Graph[tmp].end(), next_node) == Partial_Graph[tmp].end()) {
             Partial_Graph[tmp].push_back(next_node);
             dynamic_edge_num++;
-          } 
-          if (find(visited_check.begin(), visited_check.end(), next_node) == visited_check.end()) {
-            Sequential_Mapping[next_node] = Sequential_Mapping.size();
-            visited_check.push_back(next_node);
-            Check_Graph[tmp].push_back(next_node);          
-            check_node_num++;
-            check_edge_num++;
-          } else if (find(Check_Graph[tmp].begin(), Check_Graph[tmp].end(), next_node) == Check_Graph[tmp].end()) {
-            Check_Graph[tmp].push_back(next_node);
-            check_edge_num++;
           }
           tmp = next_node;
         }
@@ -246,9 +231,10 @@ int main(int argc, char* argv[]) {
     }
     Dynamic_DBG(Partial_Graph, Mapped_Graph, DDBG_Group, DDBG_Mapping, counter, static_cast<float>(dynamic_edge_num)/dynamic_node_num);
     end = chrono::system_clock::now();
-    //cout << "[DEBUG !!!] : " << DDBG_Mapping.size() << " " << visited_order.size() << endl;
-    //cout << Mapped_Graph.size() << endl;
+    cout << "[DEBUG !!!] : " << DDBG_Mapping.size() << " " << visited_order.size() << endl;
+     //cout << Mapped_Graph.size() << endl;
   } while (0);
+  //} while (Mapped_Graph.size() < mini_node_num);
 
   //float ave_deg =  static_cast<float>(edge_num)/node_num; 
   //vector<vector<unsigned int>> DBG(8);
@@ -260,63 +246,43 @@ int main(int argc, char* argv[]) {
   //double DBG_time = static_cast<double>(chrono::duration_cast<chrono::milliseconds>(tmp-end).count());
   double time = static_cast<double>(chrono::duration_cast<chrono::milliseconds>(end-start).count());
   //double clock_time = static_cast<double>(end_clock - start_clock) / CLOCKS_PER_SEC;
-
-  vector<vector<unsigned int>> DBG_Group(8);
-  float ave_deg = static_cast<float>(check_edge_num)/(check_node_num);
-  int current_deg;
-  for (auto & id : visited_check) {
-    current_deg = Check_Graph[id].size();
-    if (current_deg > 32 * ave_deg) {
-      DBG_Group.at(0).push_back(id);
-    } else if (current_deg > 16 * ave_deg && current_deg < 32 * ave_deg){
-      DBG_Group.at(1).push_back(id);
-    } else if (current_deg > 8 * ave_deg && current_deg < 16 * ave_deg){
-      DBG_Group.at(2).push_back(id);
-    } else if (current_deg > 4 * ave_deg && current_deg < 8 * ave_deg){
-      DBG_Group.at(3).push_back(id);
-    } else if (current_deg > 2 * ave_deg && current_deg < 4 * ave_deg){
-      DBG_Group.at(4).push_back(id);
-    } else if (current_deg > 1 * ave_deg && current_deg < 2 * ave_deg){
-      DBG_Group.at(5).push_back(id);
-    } else if (current_deg > 0.5 * ave_deg && current_deg < 1 * ave_deg){
-      DBG_Group.at(6).push_back(id);
-    } else {
-      DBG_Group.at(7).push_back(id);
-    }
+  long group_count = 0;
+  for (auto & group : counter) {
+    cout << static_cast<double>(group * 100)/DDBG_Mapping.size() << " % " << endl;
   }
+  long node_num = 0;
+  for (auto & [src, dsts] : Mapped_Graph) {
+    node_num += dsts.size();
+  }
+  cout << "Edge Num : " << node_num << endl;
+  cout << "Mapped Size : " << Mapped_Graph.size() << endl;
+  //cout << "node num : " << node_num << " edge num : " << edge_num << endl;
+  //cout << "DBG time : " << DBG_time << "[ms] " << endl;
+  //cout << "duration time : " << time << "[ms] " << endl;
+  //cout << " time check : " << clock_time * 1000 << " [ms] " << endl;
+  //vector<vector<long>> DBG_All(8);
+  //float all_ave_deg = static_cast<float>(Graph->GetEdges()) / Graph->GetNodes();
+  //DBG_ALL(Graph, DBG_All, all_ave_deg);
+
+  //for (int i = 0; i < DBG.size(); i++){
+  //  cout << "[DBG] Group " << i + 1 << " : " << static_cast<float>(DBG.at(i).size())*100 / visited_order.size() << " % " << endl;
+  //  cout << "    [ALL] Group " << i + 1 << " : " << static_cast<float>(DBG_All.at(i).size())*100 / Graph->GetNodes() << " % " << endl;
+  //  cout << endl;
+  //}
+
+  //map<long, long> DBG_MAP;
+  //long true_new_id = 0;
+  //for(int i = 0; i < DBG.size(); i++){
+  //  for(long j = 0; j < DBG.at(i).size(); j++){
+  //    DBG_MAP[DBG.at(i).at(j)] = true_new_id++;
+  //  }
+  //}
   
-  for (auto & tmp : DBG_Group) {
-    sort(tmp.begin(), tmp.end());
-  }
-  //unordered_map<unsigned int, unsigned int> DBG_MAP;
-  long true_new_id = 0;
-  for(int i = 0; i < DBG_Group.size(); i++){
-    for(unsigned int j = 0; j < DBG_Group.at(i).size(); j++){
-      DBG_MAP[DBG_Group.at(i).at(j)] = true_new_id++;
-    }
-  }
-  random_shuffle(visited_check.begin(), visited_check.end());
-  for (auto & id : visited_check) {
-    Random_Mapping[id] = Random_Mapping.size();
-  }
-  
-  ofstream ofs_original(argv[6], ios::trunc); // 取ってきたそのままの部分グラフ
-  ofstream ofs_sequential(argv[7], ios::trunc); // Sequential 
-  ofstream ofs_random(argv[8], ios::trunc); // random 
-  ofstream ofs_ddbg(argv[9], ios::trunc); // DDBG 
-  ofstream ofs_dbg(argv[10], ios::trunc); // DBG 
-
-  for (const auto & [src, dsts] : Check_Graph) {
-    for (const auto & dst : dsts) {
-      ofs_original << src << " " << dst << endl;
-      ofs_sequential << Sequential_Mapping[src] << " " << Sequential_Mapping[dst] << endl;
-      ofs_random << Random_Mapping[src] << " " << Random_Mapping[dst] << endl;
-      ofs_dbg<< DBG_MAP[src] << " " << DBG_MAP[dst] << endl;
-    }
-  }
-
-  cout << DBG_MAP.size() << " " << Sequential_Mapping.size() << " " << Random_Mapping.size() << endl;
-
+  ofstream ofs_ddbg(argv[6], ios::trunc); // 取ってきたそのままの部分グラフ
+  //ofstream ofs_true(argv[6], ios::trunc); // 完全なDBG 
+  //string line;
+  //string source;
+  //string target;
   unsigned int max_id = 0;
   for (const auto & [src, dsts] : Mapped_Graph) {
     if (src > max_id) max_id = src;
@@ -325,11 +291,13 @@ int main(int argc, char* argv[]) {
       ofs_ddbg << src << " " << dst << endl;
     }
   }
-  cout << "max ddbg : " << max_id << endl;
-  cout << "o.txt : " << start_node << endl;
-  cout << "s.txt : " << Sequential_Mapping[start_node] << endl;
-  cout << "r.txt : " << Random_Mapping[start_node] << endl;
-  cout << "ddbg.txt : " << DBG_MAP[start_node] << endl;
-  cout << "dbg.txt : " << DDBG_Mapping[start_node] << endl;
+
+  cout << "max_id " << max_id << endl;
+  cout << "start node " << start_node << " convert to " << DDBG_Mapping[start_node] << endl;
+  //for (TNGraph::TEdgeI EI = partial_graph->BegEI(); EI < partial_graph->EndEI(); EI++){
+  //  ofs_original << EI.GetSrcNId() << " " << EI.GetDstNId() << endl;
+  //  ofs_true << DBG_MAP[EI.GetSrcNId()] << " " << DBG_MAP[EI.GetDstNId()] << endl;
+  //}
+
   return 0;
 }
