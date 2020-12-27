@@ -315,7 +315,7 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  cout << DBG_MAP.size() << " " << Sequential_Mapping.size() << " " << Random_Mapping.size() << endl;
+  cout << DDBG_Mapping.size() << DBG_MAP.size() << " " << Sequential_Mapping.size() << " " << Random_Mapping.size() << endl;
 
   unsigned int max_id = 0;
   for (const auto & [src, dsts] : Mapped_Graph) {
@@ -329,7 +329,7 @@ int main(int argc, char* argv[]) {
   cout << "o.txt : " << start_node << endl;
   cout << "s.txt : " << Sequential_Mapping[start_node] << endl;
   cout << "r.txt : " << Random_Mapping[start_node] << endl;
-  cout << "ddbg.txt : " << DBG_MAP[start_node] << endl;
-  cout << "dbg.txt : " << DDBG_Mapping[start_node] << endl;
+  cout << "ddbg.txt : " << DDBG_Mapping[start_node] << endl;
+  cout << "dbg.txt : " << DBG_MAP[start_node] << endl;
   return 0;
 }
