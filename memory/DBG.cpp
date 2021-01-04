@@ -82,10 +82,9 @@ int main(int argc, char* argv[]) {
           continue;
         } else {
           next_node = (All_Graph[tmp]).at(engine() % All_Graph[tmp].size());
-          if (Partial_Graph[next_node].size() == 0) {
-            Partial_Graph[tmp].push_back(next_node);
+          if (find(visited_order.begin(), visited_order.end(), next_node) == visited_order.end()) {
             visited_order.push_back(next_node);
-            //buffer.push_back(make_pair(next_node, All_Graph[next_node].size()));
+            Partial_Graph[tmp].push_back(next_node);
             node_num++;
             edge_num++;
           } else if (find(Partial_Graph[tmp].begin(), Partial_Graph[tmp].end(), next_node) == Partial_Graph[tmp].end()) {
@@ -97,7 +96,7 @@ int main(int argc, char* argv[]) {
       }
     }
     end = chrono::system_clock::now();
-    cout << node_num << endl;
+    cout << "node num " << node_num << endl;
   } while (node_num < mini_node_num);
 
 
@@ -162,6 +161,8 @@ int main(int argc, char* argv[]) {
       Mapped_Graph[DBG_MAP[src]].push_back(DBG_MAP[dst]);
     }
   }
+  
+  cout << "start node " << start_node << " convert to " << DBG_MAP[start_node] << endl;
 
   ofstream ofs_dbg(argv[5], ios::trunc); // 完全版の DBG
   for (const auto & [src, dsts] : Mapped_Graph) {
